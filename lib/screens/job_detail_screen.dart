@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
+import 'chat_screen.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final String jobId;
@@ -47,7 +48,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     });
 
     try {
-      // save application in firestore
       await FirebaseFirestore.instance.collection('applications').add({
         'jobId': widget.jobId,
         'jobTitle': widget.jobData['title'],
@@ -60,7 +60,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         'appliedAt': DateTime.now().toString(),
       });
 
-      // add student id to job's applicants list
       await FirebaseFirestore.instance
           .collection('jobs')
           .doc(widget.jobId)
@@ -84,6 +83,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     var job = widget.jobData;
 
     return Scaffold(
@@ -99,7 +99,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               ),
               SizedBox(height: 20),
 
-              // job title and role
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -124,13 +123,49 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               ),
               SizedBox(height: 8),
 
-              Text(
-                job['startupName'] ?? '',
-                style: TextStyle(color: Color(0xFF9683EC), fontSize: 15),
+              // startup name + message button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    job['startupName'] ?? '',
+                    style: TextStyle(color: Color(0xFF9683EC), fontSize: 15),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            otherUserId: job['startupId'],
+                            otherUserName: job['startupName'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF9683EC).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Color(0xFF9683EC)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.chat, size: 14, color: Color(0xFF9683EC)),
+                          SizedBox(width: 4),
+                          Text(
+                            'Message',
+                            style: TextStyle(color: Color(0xFF9683EC), fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 16),
 
-              // details
               Row(
                 children: [
                   Icon(Icons.location_on, size: 16, color: Colors.grey),
