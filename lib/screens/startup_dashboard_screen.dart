@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
 import 'edit_job_screen.dart';
+import 'applicants_screen.dart';
 
 class StartupDashboardScreen extends StatelessWidget {
   void deleteJob(String jobId, BuildContext context) async {
@@ -60,9 +61,7 @@ class StartupDashboardScreen extends StatelessWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(color: Color(0xFF9683EC)),
-                      );
+                      return Center(child: CircularProgressIndicator(color: Color(0xFF9683EC)));
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -78,6 +77,7 @@ class StartupDashboardScreen extends StatelessWidget {
                       itemBuilder: (context, i) {
                         var job = jobs[i].data();
                         var jobId = jobs[i].id;
+                        int applicantCount = (job['applicants'] as List).length;
 
                         return Container(
                           margin: EdgeInsets.only(bottom: 12),
@@ -85,9 +85,7 @@ class StartupDashboardScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Color(0xFF9683EC).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Color(0xFF9683EC).withOpacity(0.3),
-                            ),
+                            border: Border.all(color: Color(0xFF9683EC).withOpacity(0.3)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,10 +96,7 @@ class StartupDashboardScreen extends StatelessWidget {
                                   Expanded(
                                     child: Text(
                                       job['title'] ?? '',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                     ),
                                   ),
                                   Container(
@@ -137,13 +132,28 @@ class StartupDashboardScreen extends StatelessWidget {
                                 ],
                               ),
                               SizedBox(height: 8),
-                              Text(
-                                '${(job['applicants'] as List).length} applicant(s)',
-                                style: TextStyle(color: Color(0xFF9683EC), fontSize: 12, fontWeight: FontWeight.w500),
+
+                              // view applicants button
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ApplicantsScreen(jobId: jobId, jobTitle: job['title']),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  '$applicantCount applicant(s) — tap to view',
+                                  style: TextStyle(
+                                    color: Color(0xFF9683EC),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ),
                               SizedBox(height: 12),
 
-                              // edit and delete buttons
                               Row(
                                 children: [
                                   Expanded(
@@ -160,9 +170,7 @@ class StartupDashboardScreen extends StatelessWidget {
                                       label: Text('Edit', style: TextStyle(color: Color(0xFF9683EC))),
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(color: Color(0xFF9683EC)),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                       ),
                                     ),
                                   ),
@@ -174,9 +182,7 @@ class StartupDashboardScreen extends StatelessWidget {
                                       label: Text('Delete', style: TextStyle(color: Colors.red)),
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(color: Colors.red),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                       ),
                                     ),
                                   ),
