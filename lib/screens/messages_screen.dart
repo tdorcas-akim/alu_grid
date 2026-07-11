@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
 import 'chat_screen.dart';
+import 'search_users_screen.dart';
 
 class MessagesScreen extends StatelessWidget {
   @override
@@ -10,6 +11,16 @@ class MessagesScreen extends StatelessWidget {
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => SearchUsersScreen()),
+          );
+        },
+        backgroundColor: Color(0xFF9683EC),
+        child: Icon(Icons.edit, color: Colors.white),
+      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(20),
@@ -18,11 +29,7 @@ class MessagesScreen extends StatelessWidget {
             children: [
               Text(
                 'Messages',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF9683EC),
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF9683EC)),
               ),
               SizedBox(height: 20),
 
@@ -39,7 +46,20 @@ class MessagesScreen extends StatelessWidget {
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return Center(
-                        child: Text('No messages yet!', style: TextStyle(color: Colors.grey)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
+                            SizedBox(height: 12),
+                            Text('No messages yet!', style: TextStyle(color: Colors.grey)),
+                            SizedBox(height: 8),
+                            Text(
+                              'Tap the pencil button to start a conversation',
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       );
                     }
 
@@ -50,8 +70,6 @@ class MessagesScreen extends StatelessWidget {
                       itemBuilder: (context, i) {
                         var chat = chats[i].data();
                         var users = chat['users'] as List;
-
-                        // get the other person's id
                         String otherId = users.firstWhere((id) => id != auth.user!.uid);
                         String otherName = chat['user1Name'] == auth.name
                             ? chat['user2Name']
@@ -91,10 +109,7 @@ class MessagesScreen extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        otherName,
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
+                                      Text(otherName, style: TextStyle(fontWeight: FontWeight.bold)),
                                       SizedBox(height: 4),
                                       Text(
                                         chat['lastMsg'] ?? '',

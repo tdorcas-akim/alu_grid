@@ -16,6 +16,7 @@ class JobDetailScreen extends StatefulWidget {
 
 class _JobDetailScreenState extends State<JobDetailScreen> {
   final coverLetterInput = TextEditingController();
+  final portfolioInput = TextEditingController();
   bool loading = false;
   bool applied = false;
   String msg = '';
@@ -56,6 +57,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         'studentId': auth.user!.uid,
         'studentName': auth.name,
         'coverLetter': coverLetterInput.text.trim(),
+        'portfolioLink': portfolioInput.text.trim(),
         'status': 'pending',
         'appliedAt': DateTime.now().toString(),
       });
@@ -123,7 +125,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               ),
               SizedBox(height: 8),
 
-              // startup name + message button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -154,10 +155,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         children: [
                           Icon(Icons.chat, size: 14, color: Color(0xFF9683EC)),
                           SizedBox(width: 4),
-                          Text(
-                            'Message',
-                            style: TextStyle(color: Color(0xFF9683EC), fontSize: 13),
-                          ),
+                          Text('Message', style: TextStyle(color: Color(0xFF9683EC), fontSize: 13)),
                         ],
                       ),
                     ),
@@ -199,15 +197,29 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                 ),
+                SizedBox(height: 16),
+
+                Text('Portfolio Link (optional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                SizedBox(height: 8),
+                TextField(
+                  controller: portfolioInput,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. github.com/yourname or linkedin.com/in/you',
+                    prefixIcon: Icon(Icons.link, color: Color(0xFF9683EC)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Color(0xFF9683EC)),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 8),
               ],
 
               if (msg.isNotEmpty)
                 Text(
                   msg,
-                  style: TextStyle(
-                    color: msg.contains('success') ? Colors.green : Colors.red,
-                  ),
+                  style: TextStyle(color: msg.contains('success') ? Colors.green : Colors.red),
                 ),
 
               SizedBox(height: 16),
@@ -219,9 +231,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: applied ? Colors.grey : Color(0xFF9683EC),
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: loading
                       ? CircularProgressIndicator(color: Colors.white)

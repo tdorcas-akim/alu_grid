@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'chat_screen.dart';
 
 class ApplicantsScreen extends StatelessWidget {
   final String jobId;
@@ -30,11 +31,7 @@ class ApplicantsScreen extends StatelessWidget {
               SizedBox(height: 20),
               Text(
                 'Applicants',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF9683EC),
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF9683EC)),
               ),
               SizedBox(height: 4),
               Text(jobTitle, style: TextStyle(color: Colors.grey)),
@@ -52,9 +49,7 @@ class ApplicantsScreen extends StatelessWidget {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(
-                        child: Text('No applicants yet!', style: TextStyle(color: Colors.grey)),
-                      );
+                      return Center(child: Text('No applicants yet!', style: TextStyle(color: Colors.grey)));
                     }
 
                     var apps = snapshot.data!.docs;
@@ -67,7 +62,7 @@ class ApplicantsScreen extends StatelessWidget {
 
                         Color statusColor = app['status'] == 'accepted'
                             ? Colors.green
-                            : app['status'] == 'rejected'
+                            : app['status'] == 'not selected'
                                 ? Colors.red
                                 : Colors.orange;
 
@@ -103,21 +98,56 @@ class ApplicantsScreen extends StatelessWidget {
                                 ],
                               ),
                               SizedBox(height: 8),
-                              Text(
-                                'Cover Letter:',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
+                              Text('Cover Letter:', style: TextStyle(fontWeight: FontWeight.w500)),
                               SizedBox(height: 4),
                               Text(
                                 app['coverLetter'] ?? '',
                                 style: TextStyle(color: Colors.grey, fontSize: 13),
                               ),
-                              SizedBox(height: 12),
 
-                              // accept and reject buttons
-                              if (app['status'] == 'pending')
+                              if (app['portfolioLink'] != null && app['portfolioLink'].toString().isNotEmpty) ...[
+                                SizedBox(height: 6),
                                 Row(
                                   children: [
+                                    Icon(Icons.link, size: 14, color: Color(0xFF9683EC)),
+                                    SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        app['portfolioLink'],
+                                        style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+
+                              SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => ChatScreen(
+                                              otherUserId: app['studentId'],
+                                              otherUserName: app['studentName'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: Icon(Icons.chat, size: 14, color: Color(0xFF9683EC)),
+                                      label: Text('Message', style: TextStyle(color: Color(0xFF9683EC), fontSize: 13)),
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(color: Color(0xFF9683EC)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 6),
+                                  if (app['status'] != 'accepted')
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: () => updateStatus(appId, 'accepted'),
@@ -125,22 +155,34 @@ class ApplicantsScreen extends StatelessWidget {
                                           backgroundColor: Colors.green,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                         ),
-                                        child: Text('Accept', style: TextStyle(color: Colors.white)),
+                                        child: Text('Accept', style: TextStyle(color: Colors.white, fontSize: 13)),
                                       ),
                                     ),
-                                    SizedBox(width: 8),
+                                  SizedBox(width: 6),
+                                  if (app['status'] == 'accepted')
                                     Expanded(
                                       child: ElevatedButton(
-                                        onPressed: () => updateStatus(appId, 'rejected'),
+                                        onPressed: () => updateStatus(appId, 'pending'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.orange,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                        child: Text('Reconsider', style: TextStyle(color: Colors.white, fontSize: 11)),
+                                      ),
+                                    )
+                                  else
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () => updateStatus(appId, 'not selected'),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                         ),
-                                        child: Text('Reject', style: TextStyle(color: Colors.white)),
+                                        child: Text('Not Select', style: TextStyle(color: Colors.white, fontSize: 11)),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                ],
+                              ),
                             ],
                           ),
                         );
