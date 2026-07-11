@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../providers/auth_provider.dart';
 import 'job_detail_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
@@ -44,7 +42,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
               ),
               SizedBox(height: 16),
 
-              // search bar
               TextField(
                 onChanged: (val) => setState(() => searchText = val.toLowerCase()),
                 decoration: InputDecoration(
@@ -59,7 +56,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
               ),
               SizedBox(height: 12),
 
-              // role filter chips
               SizedBox(
                 height: 36,
                 child: ListView.builder(
@@ -93,12 +89,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
               ),
               SizedBox(height: 16),
 
-              // jobs list
               Expanded(
                 child: StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('jobs')
-                      .snapshots(),
+                  stream: FirebaseFirestore.instance.collection('jobs').snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator(color: Color(0xFF9683EC)));
@@ -187,10 +180,35 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                     Icon(Icons.location_on, size: 14, color: Colors.grey),
                                     SizedBox(width: 4),
                                     Text(job['location'] ?? '', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                    SizedBox(width: 16),
+                                    SizedBox(width: 12),
                                     Icon(Icons.access_time, size: 14, color: Colors.grey),
                                     SizedBox(width: 4),
                                     Text(job['duration'] ?? '', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    SizedBox(width: 12),
+                                    // work type badge
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: job['workType'] == 'Remote'
+                                            ? Colors.green.withOpacity(0.15)
+                                            : job['workType'] == 'Hybrid'
+                                                ? Colors.orange.withOpacity(0.15)
+                                                : Colors.blue.withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        job['workType'] ?? 'Remote',
+                                        style: TextStyle(
+                                          color: job['workType'] == 'Remote'
+                                              ? Colors.green
+                                              : job['workType'] == 'Hybrid'
+                                                  ? Colors.orange
+                                                  : Colors.blue,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],

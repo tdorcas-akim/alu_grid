@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
@@ -15,9 +16,10 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final msgInput = TextEditingController();
+  final scrollController = ScrollController();
   final db = FirebaseFirestore.instance;
+  final focusNode = FocusNode();
 
-  // create a unique chat room id from both user ids
   String getChatId(String uid1, String uid2) {
     var ids = [uid1, uid2];
     ids.sort();
@@ -31,21 +33,34 @@ class _ChatScreenState extends State<ChatScreen> {
     String chatId = getChatId(auth.user!.uid, widget.otherUserId);
     String text = msgInput.text.trim();
     msgInput.clear();
+    focusNode.requestFocus();
 
     await db.collection('chats').doc(chatId).collection('messages').add({
       'text': text,
       'senderId': auth.user!.uid,
       'senderName': auth.name,
       'sentAt': DateTime.now().millisecondsSinceEpoch,
+      'read': false,
     });
 
-    // update last message in chat doc
     await db.collection('chats').doc(chatId).set({
       'users': [auth.user!.uid, widget.otherUserId],
       'lastMsg': text,
       'lastMsgTime': DateTime.now().millisecondsSinceEpoch,
       'user1Name': auth.name,
       'user2Name': widget.otherUserName,
+      'unreadFor': widget.otherUserId,
+    });
+
+    // scroll to bottom after sending
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -86,7 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Divider(height: 1),
 
-            // messages list
+            // messages
             Expanded(
               child: StreamBuilder(
                 stream: db
@@ -109,6 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   var msgs = snapshot.data!.docs;
 
                   return ListView.builder(
+                    controller: scrollController,
                     padding: EdgeInsets.all(16),
                     itemCount: msgs.length,
                     itemBuilder: (context, i) {
@@ -140,14 +156,21 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
 
-            // message input
+            // input box - multiline with enter to send
             Padding(
               padding: EdgeInsets.all(12),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
                       controller: msgInput,
+                      focusNode: focusNode,
+                      maxLines: 4,
+                      minLines: 1,
+                      keyboardType: TextInputType.multiline,
+                      // shift+enter for new line, enter to send
+                      onSubmitted: (_) => sendMsg(),
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),

@@ -14,10 +14,10 @@ class _PostJobScreenState extends State<PostJobScreen> {
   final locationInput = TextEditingController();
   final durationInput = TextEditingController();
   String selectedRole = 'Design';
+  String workType = 'Remote';
   bool loading = false;
   String msg = '';
 
-  // job categories/roles
   List<String> roles = [
     'Design',
     'Software Development',
@@ -28,6 +28,8 @@ class _PostJobScreenState extends State<PostJobScreen> {
     'Research',
     'Community Management',
   ];
+
+  List<String> workTypes = ['Remote', 'In-Person', 'Hybrid'];
 
   void postJob() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -49,6 +51,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
         'location': locationInput.text.trim(),
         'duration': durationInput.text.trim(),
         'role': selectedRole,
+        'workType': workType,
         'startupId': auth.user!.uid,
         'startupName': auth.name,
         'postedAt': DateTime.now().toString(),
@@ -58,7 +61,6 @@ class _PostJobScreenState extends State<PostJobScreen> {
       setState(() {
         loading = false;
         msg = 'Job posted successfully!';
-        // clear fields
         titleInput.clear();
         descriptionInput.clear();
         locationInput.clear();
@@ -90,21 +92,15 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 ),
               ),
               SizedBox(height: 8),
-              Text(
-                'Fill in the details below',
-                style: TextStyle(color: Colors.grey),
-              ),
+              Text('Fill in the details below', style: TextStyle(color: Colors.grey)),
               SizedBox(height: 24),
 
-              // job title
               TextField(
                 controller: titleInput,
                 decoration: InputDecoration(
                   labelText: 'Job Title',
                   hintText: 'e.g. UI Designer needed',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -113,16 +109,13 @@ class _PostJobScreenState extends State<PostJobScreen> {
               ),
               SizedBox(height: 16),
 
-              // description
               TextField(
                 controller: descriptionInput,
                 maxLines: 4,
                 decoration: InputDecoration(
                   labelText: 'Description',
                   hintText: 'What will the intern do?',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -131,15 +124,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
               ),
               SizedBox(height: 16),
 
-              // location
               TextField(
                 controller: locationInput,
                 decoration: InputDecoration(
                   labelText: 'Location',
-                  hintText: 'e.g. Remote, ALU Campus',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  hintText: 'e.g. Kigali, Rwanda',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -148,15 +138,12 @@ class _PostJobScreenState extends State<PostJobScreen> {
               ),
               SizedBox(height: 16),
 
-              // duration
               TextField(
                 controller: durationInput,
                 decoration: InputDecoration(
                   labelText: 'Duration',
                   hintText: 'e.g. 3 months',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -165,18 +152,48 @@ class _PostJobScreenState extends State<PostJobScreen> {
               ),
               SizedBox(height: 16),
 
-              // role dropdown
-              Text(
-                'Role Category',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              // work type selector
+              Text('Work Type', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Row(
+                children: workTypes.map((type) {
+                  bool active = workType == type;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => workType = type),
+                      child: Container(
+                        margin: EdgeInsets.only(right: type != 'Hybrid' ? 8 : 0),
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: active ? Color(0xFF9683EC) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: active ? Color(0xFF9683EC) : Colors.grey,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              color: active ? Colors.white : Colors.grey,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
+              SizedBox(height: 16),
+
+              Text('Role Category', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: selectedRole,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -193,9 +210,7 @@ class _PostJobScreenState extends State<PostJobScreen> {
                 Text(
                   msg,
                   style: TextStyle(
-                    color: msg.contains('success')
-                        ? Colors.green
-                        : Colors.red,
+                    color: msg.contains('success') ? Colors.green : Colors.red,
                   ),
                 ),
 
@@ -208,16 +223,11 @@ class _PostJobScreenState extends State<PostJobScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF9683EC),
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: loading
                       ? CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          'Post Job',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
+                      : Text('Post Job', style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
             ],

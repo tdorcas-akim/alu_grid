@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
 import 'browse_screen.dart';
 import 'applications_screen.dart';
@@ -32,6 +33,38 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
+  // check if user has unread messages
+  Widget buildMessageIcon(String userId) {
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection('chats')
+          .where('users', arrayContains: userId)
+          .where('unreadFor', isEqualTo: userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        bool hasUnread = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+        return Stack(
+          children: [
+            Icon(Icons.chat),
+            if (hasUnread)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -52,13 +85,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
                 BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Post Job'),
                 BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Applicants'),
-                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
+                BottomNavigationBarItem(
+                  icon: buildMessageIcon(auth.user?.uid ?? ''),
+                  label: 'Messages',
+                ),
                 BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
               ]
             : [
                 BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Browse'),
                 BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Applications'),
-                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
+                BottomNavigationBarItem(
+                  icon: buildMessageIcon(auth.user?.uid ?? ''),
+                  label: 'Messages',
+                ),
                 BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
               ],
       ),
