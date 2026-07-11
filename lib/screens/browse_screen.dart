@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../providers/auth_provider.dart';
 import 'job_detail_screen.dart';
 
 class BrowseScreen extends StatefulWidget {
@@ -10,6 +12,7 @@ class BrowseScreen extends StatefulWidget {
 class _BrowseScreenState extends State<BrowseScreen> {
   String searchText = '';
   String selectedFilter = 'All';
+  List<String> mySkills = [];
 
   List<String> filters = [
     'All',
@@ -23,8 +26,60 @@ class _BrowseScreenState extends State<BrowseScreen> {
     'Community Management',
   ];
 
+  // skill to role mapping for matching
+  Map<String, List<String>> skillToRole = {
+    'UI/UX Design': ['Design'],
+    'Graphic Design': ['Design'],
+    'Flutter': ['Software Development'],
+    'Python': ['Software Development'],
+    'JavaScript': ['Software Development'],
+    'Marketing': ['Marketing'],
+    'Social Media': ['Marketing', 'Content Creation'],
+    'Content Writing': ['Content Creation'],
+    'Business Analysis': ['Business Analysis'],
+    'Research': ['Research'],
+    'Community Management': ['Community Management'],
+    'Operations': ['Operations'],
+    'Data Analysis': ['Business Analysis', 'Research'],
+    'Project Management': ['Operations'],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    loadMySkills();
+  }
+
+  void loadMySkills() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    if (auth.role != 'student') return;
+
+    var doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(auth.user!.uid)
+        .get();
+
+    if (doc.exists) {
+      List skills = doc.data()?['skills'] ?? [];
+      setState(() {
+        mySkills = skills.map((s) => s.toString()).toList();
+      });
+    }
+  }
+
+  bool isMatch(String jobRole) {
+    if (mySkills.isEmpty) return false;
+    for (var skill in mySkills) {
+      List<String> matchedRoles = skillToRole[skill] ?? [];
+      if (matchedRoles.contains(jobRole)) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -110,6 +165,15 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       return matchSearch && matchFilter;
                     }).toList();
 
+                    // sort matched jobs to top
+                    jobs.sort((a, b) {
+                      bool aMatch = isMatch(a.data()['role'] ?? '');
+                      bool bMatch = isMatch(b.data()['role'] ?? '');
+                      if (aMatch && !bMatch) return -1;
+                      if (!aMatch && bMatch) return 1;
+                      return 0;
+                    });
+
                     if (jobs.isEmpty) {
                       return Center(child: Text('No jobs match your search', style: TextStyle(color: Colors.grey)));
                     }
@@ -119,6 +183,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       itemBuilder: (context, i) {
                         var job = jobs[i].data();
                         var jobId = jobs[i].id;
+                        bool matched = isMatch(job['role'] ?? '');
 
                         return GestureDetector(
                           onTap: () {
@@ -133,9 +198,16 @@ class _BrowseScreenState extends State<BrowseScreen> {
                             margin: EdgeInsets.only(bottom: 12),
                             padding: EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Color(0xFF9683EC).withOpacity(0.08),
+                              color: matched
+                                  ? Color(0xFF9683EC).withOpacity(0.15)
+                                  : Color(0xFF9683EC).withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Color(0xFF9683EC).withOpacity(0.2)),
+                              border: Border.all(
+                                color: matched
+                                    ? Color(0xFF9683EC)
+                                    : Color(0xFF9683EC).withOpacity(0.2),
+                                width: matched ? 1.5 : 1,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,9 +216,29 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Text(
-                                        job['title'] ?? '',
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      child: Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              job['title'] ?? '',
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                            ),
+                                          ),
+                                          if (matched) ...[
+                                            SizedBox(width: 6),
+                                            Container(
+                                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Color(0xFF25D366),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                '✓ Match',
+                                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
                                     Container(
@@ -185,7 +277,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                     SizedBox(width: 4),
                                     Text(job['duration'] ?? '', style: TextStyle(color: Colors.grey, fontSize: 12)),
                                     SizedBox(width: 12),
-                                    // work type badge
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
