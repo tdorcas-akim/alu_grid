@@ -7,6 +7,7 @@ import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'startup_dashboard_screen.dart';
 import 'post_job_screen.dart';
+import 'all_applicants_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -16,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int currentTab = 0;
 
-  // screens for students
   List<Widget> studentScreens = [
     BrowseScreen(),
     ApplicationsScreen(),
@@ -24,10 +24,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  // screens for startups
   List<Widget> startupScreens = [
     StartupDashboardScreen(),
     PostJobScreen(),
+    AllApplicantsScreen(),
     MessagesScreen(),
     ProfileScreen(),
   ];
@@ -49,40 +49,17 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         items: isStartup
             ? [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard),
-                  label: 'Dashboard',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.add_box),
-                  label: 'Post Job',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Messages',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
+                BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+                BottomNavigationBarItem(icon: Icon(Icons.add_box), label: 'Post Job'),
+                BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Applicants'),
+                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
               ]
             : [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search),
-                  label: 'Browse',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.assignment),
-                  label: 'Applications',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Messages',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
+                BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Browse'),
+                BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Applications'),
+                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Messages'),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
               ],
       ),
     );
