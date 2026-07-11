@@ -13,16 +13,20 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final bioInput = TextEditingController();
   final yearInput = TextEditingController();
+  final fieldOfStudyInput = TextEditingController();
   final startupDescInput = TextEditingController();
+  final customSkillInput = TextEditingController();
   bool editing = false;
   bool loading = false;
 
-  // all available skills
   List<String> allSkills = [
     'UI/UX Design',
     'Flutter',
     'Python',
     'JavaScript',
+    'HTML/CSS',
+    'React',
+    'Node.js',
     'Marketing',
     'Content Writing',
     'Business Analysis',
@@ -33,6 +37,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'Data Analysis',
     'Social Media',
     'Project Management',
+    'Figma',
+    'Canva',
+    'Video Editing',
   ];
 
   List<String> selectedSkills = [];
@@ -54,17 +61,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
       var data = doc.data()!;
       bioInput.text = data['bio'] ?? '';
       yearInput.text = data['year'] ?? '';
+      fieldOfStudyInput.text = data['fieldOfStudy'] ?? '';
       startupDescInput.text = data['startupDesc'] ?? '';
       List skills = data['skills'] ?? [];
+      List customSkills = data['customSkills'] ?? [];
+
       setState(() {
         selectedSkills = skills.map((s) => s.toString()).toList();
+        // add custom skills to the list so they show up
+        for (var cs in customSkills) {
+          if (!allSkills.contains(cs.toString())) {
+            allSkills.add(cs.toString());
+          }
+          if (!selectedSkills.contains(cs.toString())) {
+            selectedSkills.add(cs.toString());
+          }
+        }
       });
     }
+  }
+
+  void addCustomSkill() {
+    String skill = customSkillInput.text.trim();
+    if (skill.isEmpty) return;
+    if (allSkills.contains(skill)) {
+      customSkillInput.clear();
+      return;
+    }
+    setState(() {
+      allSkills.add(skill);
+      selectedSkills.add(skill);
+      customSkillInput.clear();
+    });
   }
 
   void saveProfile() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     setState(() => loading = true);
+
+    // separate default and custom skills
+    List<String> defaultSkillsList = [
+      'UI/UX Design', 'Flutter', 'Python', 'JavaScript', 'HTML/CSS',
+      'React', 'Node.js', 'Marketing', 'Content Writing', 'Business Analysis',
+      'Research', 'Community Management', 'Operations', 'Graphic Design',
+      'Data Analysis', 'Social Media', 'Project Management', 'Figma', 'Canva', 'Video Editing'
+    ];
+
+    List<String> customSkills = selectedSkills
+        .where((s) => !defaultSkillsList.contains(s))
+        .toList();
 
     await FirebaseFirestore.instance
         .collection('users')
@@ -72,7 +117,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .update({
       'bio': bioInput.text.trim(),
       'year': yearInput.text.trim(),
+      'fieldOfStudy': fieldOfStudyInput.text.trim(),
       'skills': selectedSkills,
+      'customSkills': customSkills,
       'startupDesc': startupDescInput.text.trim(),
     });
 
@@ -133,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 24),
 
-              // user info card
+              // profile card
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -162,6 +209,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           auth.role.toUpperCase(),
                           style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
                         ),
+                        if (fieldOfStudyInput.text.isNotEmpty && !editing)
+                          Text(
+                            fieldOfStudyInput.text,
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
                       ],
                     ),
                   ],
@@ -170,7 +222,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SizedBox(height: 20),
 
               if (editing) ...[
-                // edit mode
                 if (!isStartup) ...[
                   TextField(
                     controller: bioInput,
@@ -186,6 +237,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
+
+                  TextField(
+                    controller: fieldOfStudyInput,
+                    decoration: InputDecoration(
+                      labelText: 'Field of Study',
+                      hintText: 'e.g. Computer Science, Business...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF9683EC)),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
                   TextField(
                     controller: yearInput,
                     decoration: InputDecoration(
@@ -199,8 +265,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   SizedBox(height: 20),
+
                   Text('My Skills', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 10),
+
+                  // custom skill input
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: customSkillInput,
+                          decoration: InputDecoration(
+                            hintText: 'Add a custom skill...',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Color(0xFF9683EC)),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: addCustomSkill,
+                        child: Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF9683EC),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.add, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -237,7 +338,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     }).toList(),
                   ),
                 ] else ...[
-                  // startup edit
                   TextField(
                     controller: startupDescInput,
                     maxLines: 4,
@@ -252,6 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ],
+
                 SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -267,8 +368,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : Text('Save Profile', style: TextStyle(color: Colors.white, fontSize: 16)),
                   ),
                 ),
+
               ] else ...[
-                // view mode
                 if (!isStartup) ...[
                   if (bioInput.text.isNotEmpty) ...[
                     Text('Bio', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -317,7 +418,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(height: 8),
 
-              // dark mode toggle
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
@@ -350,7 +450,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 16),
 
-              // logout
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

@@ -19,6 +19,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void register() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
+    // validate alu email for students
+    if (selectedRole == 'student' && !emailInput.text.trim().endsWith('@alustudent.com')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Students must use their student email!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (nameInput.text.isEmpty || emailInput.text.isEmpty || passwordInput.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     bool success = await auth.register(
       nameInput.text.trim(),
       emailInput.text.trim(),
@@ -58,16 +79,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             SizedBox(height: 8),
-            Text('Join ALU Grid today', style: TextStyle(color: Colors.grey)),
+            Text('Join ALU Grid', style: TextStyle(color: Colors.grey)),
             SizedBox(height: 32),
 
             TextField(
               controller: nameInput,
               decoration: InputDecoration(
                 labelText: 'Full Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -80,9 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: emailInput,
               decoration: InputDecoration(
                 labelText: 'Email',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -91,15 +108,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             SizedBox(height: 16),
 
-            // password with eye icon
             TextField(
               controller: passwordInput,
               obscureText: !showPassword,
               decoration: InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Color(0xFF9683EC)),
@@ -109,18 +123,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     showPassword ? Icons.visibility : Icons.visibility_off,
                     color: Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() => showPassword = !showPassword);
-                  },
+                  onPressed: () => setState(() => showPassword = !showPassword),
                 ),
               ),
             ),
             SizedBox(height: 24),
 
-            Text(
-              'I am a...',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+            Text('I am a...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             SizedBox(height: 12),
 
             Row(
@@ -131,23 +140,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: selectedRole == 'student'
-                            ? Color(0xFF9683EC)
-                            : Colors.grey[100],
+                        color: selectedRole == 'student' ? Color(0xFF9683EC) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: selectedRole == 'student'
-                              ? Color(0xFF9683EC)
-                              : Colors.grey[300]!,
+                          color: selectedRole == 'student' ? Color(0xFF9683EC) : Colors.grey[300]!,
                         ),
                       ),
                       child: Center(
                         child: Text(
                           'Student',
                           style: TextStyle(
-                            color: selectedRole == 'student'
-                                ? Colors.white
-                                : Colors.grey,
+                            color: selectedRole == 'student' ? Colors.white : Colors.grey,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -163,23 +166,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: selectedRole == 'startup'
-                            ? Color(0xFF9683EC)
-                            : Colors.grey[100],
+                        color: selectedRole == 'startup' ? Color(0xFF9683EC) : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: selectedRole == 'startup'
-                              ? Color(0xFF9683EC)
-                              : Colors.grey[300]!,
+                          color: selectedRole == 'startup' ? Color(0xFF9683EC) : Colors.grey[300]!,
                         ),
                       ),
                       child: Center(
                         child: Text(
                           'Startup',
                           style: TextStyle(
-                            color: selectedRole == 'startup'
-                                ? Colors.white
-                                : Colors.grey,
+                            color: selectedRole == 'startup' ? Colors.white : Colors.grey,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -190,6 +187,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
+
+            // show hint for students
+            if (selectedRole == 'student') ...[
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: Color(0xFF9683EC)),
+                  SizedBox(width: 6),
+                  Text(
+                    'Only alu student emails are accepted',
+                    style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
+
             SizedBox(height: 8),
 
             if (auth.error.isNotEmpty)
@@ -204,16 +217,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF9683EC),
                   padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: auth.loading
                     ? CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        'Create Account',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
+                    : Text('Create Account', style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ),
             SizedBox(height: 16),

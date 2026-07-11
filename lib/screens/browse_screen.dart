@@ -26,22 +26,46 @@ class _BrowseScreenState extends State<BrowseScreen> {
     'Community Management',
   ];
 
-  // skill to role mapping for matching
-  Map<String, List<String>> skillToRole = {
-    'UI/UX Design': ['Design'],
-    'Graphic Design': ['Design'],
-    'Flutter': ['Software Development'],
-    'Python': ['Software Development'],
-    'JavaScript': ['Software Development'],
-    'Marketing': ['Marketing'],
-    'Social Media': ['Marketing', 'Content Creation'],
-    'Content Writing': ['Content Creation'],
-    'Business Analysis': ['Business Analysis'],
-    'Research': ['Research'],
-    'Community Management': ['Community Management'],
-    'Operations': ['Operations'],
-    'Data Analysis': ['Business Analysis', 'Research'],
-    'Project Management': ['Operations'],
+  // smart matching — skills that relate to each role
+  // even if the exact job title isn't in the skills list
+  Map<String, List<String>> roleSkillMap = {
+    'Design': [
+      'UI/UX Design', 'Graphic Design', 'Figma', 'Canva',
+      'HTML/CSS', 'JavaScript', 'React', 'Flutter',
+      'Video Editing', 'Creative', 'Visual',
+    ],
+    'Software Development': [
+      'Flutter', 'Python', 'JavaScript', 'React', 'Node.js',
+      'HTML/CSS', 'Programming', 'Coding', 'Development',
+      'UI/UX Design', 'Figma', 'Data Analysis',
+    ],
+    'Marketing': [
+      'Marketing', 'Social Media', 'Content Writing',
+      'Community Management', 'Canva', 'Video Editing',
+      'Research', 'Business Analysis',
+    ],
+    'Business Analysis': [
+      'Business Analysis', 'Research', 'Data Analysis',
+      'Project Management', 'Operations', 'Excel',
+      'Marketing', 'Community Management',
+    ],
+    'Content Creation': [
+      'Content Writing', 'Video Editing', 'Canva',
+      'Social Media', 'Marketing', 'Graphic Design',
+      'Community Management',
+    ],
+    'Operations': [
+      'Operations', 'Project Management', 'Business Analysis',
+      'Research', 'Community Management',
+    ],
+    'Research': [
+      'Research', 'Data Analysis', 'Business Analysis',
+      'Content Writing', 'Python',
+    ],
+    'Community Management': [
+      'Community Management', 'Social Media', 'Marketing',
+      'Content Writing', 'Operations',
+    ],
   };
 
   @override
@@ -69,17 +93,21 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   bool isMatch(String jobRole) {
     if (mySkills.isEmpty) return false;
-    for (var skill in mySkills) {
-      List<String> matchedRoles = skillToRole[skill] ?? [];
-      if (matchedRoles.contains(jobRole)) return true;
+    List<String> relatedSkills = roleSkillMap[jobRole] ?? [];
+    for (var mySkill in mySkills) {
+      // check direct match or partial match
+      for (var related in relatedSkills) {
+        if (related.toLowerCase().contains(mySkill.toLowerCase()) ||
+            mySkill.toLowerCase().contains(related.toLowerCase())) {
+          return true;
+        }
+      }
     }
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -165,7 +193,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       return matchSearch && matchFilter;
                     }).toList();
 
-                    // sort matched jobs to top
+                    // sort matched jobs to the top
                     jobs.sort((a, b) {
                       bool aMatch = isMatch(a.data()['role'] ?? '');
                       bool bMatch = isMatch(b.data()['role'] ?? '');
@@ -203,9 +231,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                   : Color(0xFF9683EC).withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: matched
-                                    ? Color(0xFF9683EC)
-                                    : Color(0xFF9683EC).withOpacity(0.2),
+                                color: matched ? Color(0xFF9683EC) : Color(0xFF9683EC).withOpacity(0.2),
                                 width: matched ? 1.5 : 1,
                               ),
                             ),
@@ -234,7 +260,11 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                               ),
                                               child: Text(
                                                 '✓ Match',
-                                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ],
