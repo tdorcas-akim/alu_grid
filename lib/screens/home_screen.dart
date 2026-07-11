@@ -33,7 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  // check if user has unread messages
   Widget buildMessageIcon(String userId) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance
@@ -54,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Color(0xFF25D366), // whatsapp green
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -69,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     bool isStartup = auth.role == 'startup';
-
     List<Widget> screens = isStartup ? startupScreens : studentScreens;
 
     return Scaffold(
