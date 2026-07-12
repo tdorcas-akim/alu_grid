@@ -120,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             SizedBox(height: 8),
-            Text('Join ALU Grid today', style: TextStyle(color: Colors.grey)),
+            Text('Join ALU Grid', style: TextStyle(color: Colors.grey)),
             SizedBox(height: 32),
 
             // role picker first so email hint updates
@@ -228,7 +228,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: startupOneLinerInput,
                 decoration: InputDecoration(
                   labelText: 'What does your startup do? *',
-                  hintText: 'e.g. We help farmers sell crops online',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -242,8 +241,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: startupWebsiteInput,
                 decoration: InputDecoration(
                   labelText: 'Website / Domain (optional)',
-                  hintText: 'e.g. mystartup.com or github.com/mystartup',
-                  prefixIcon: Icon(Icons.language, color: Color(0xFF9683EC)),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
