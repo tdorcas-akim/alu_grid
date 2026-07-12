@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import 'login_screen.dart';
@@ -44,6 +45,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   List<String> selectedSkills = [];
 
+  // startup info loaded from firestore
+  String startupName = '';
+  String startupOneLiner = '';
+  String startupWebsite = '';
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       List customSkills = data['customSkills'] ?? [];
 
       setState(() {
+        startupName = data['startupName'] ?? '';
+        startupOneLiner = data['startupOneLiner'] ?? '';
+        startupWebsite = data['startupWebsite'] ?? '';
         selectedSkills = skills.map((s) => s.toString()).toList();
         for (var cs in customSkills) {
           if (!allSkills.contains(cs.toString())) {
@@ -134,6 +143,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void openLink(String url) async {
+    if (url.isEmpty) return;
+    if (!url.startsWith('http')) url = 'https://$url';
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   void deleteAccount() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
@@ -160,13 +178,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (confirm) {
       try {
         String uid = auth.user!.uid;
-
-        // delete user data from firestore
         await FirebaseFirestore.instance.collection('users').doc(uid).delete();
-
-        // delete firebase auth account
         await auth.user!.delete();
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => LoginScreen()),
@@ -244,23 +257,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          auth.name,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        Text(
-                          auth.role.toUpperCase(),
-                          style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
-                        ),
-                        if (fieldOfStudyInput.text.isNotEmpty && !editing)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            fieldOfStudyInput.text,
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                            auth.name,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                           ),
-                      ],
+                          if (isStartup && startupName.isNotEmpty)
+                            Text(
+                              startupName,
+                              style: TextStyle(color: Color(0xFF9683EC), fontSize: 13),
+                            ),
+                          Text(
+                            auth.role.toUpperCase(),
+                            style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
+                          ),
+                          if (!isStartup && fieldOfStudyInput.text.isNotEmpty)
+                            Text(
+                              fieldOfStudyInput.text,
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -315,7 +335,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text('My Skills', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 10),
 
-                  // custom skill input
                   Row(
                     children: [
                       Expanded(
@@ -389,7 +408,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     maxLines: 4,
                     decoration: InputDecoration(
                       labelText: 'Startup Description',
-                      hintText: 'What does your startup do?',
+                      hintText: 'Tell students more about your startup...',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -453,10 +472,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(height: 16),
                   ],
                 ] else ...[
+                  // startup view mode
+                  if (startupOneLiner.isNotEmpty) ...[
+                    Text('What we do', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 8),
+                    Text(startupOneLiner, style: TextStyle(color: Colors.grey, height: 1.5)),
+                    SizedBox(height: 16),
+                  ],
                   if (startupDescInput.text.isNotEmpty) ...[
                     Text('About', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     SizedBox(height: 8),
                     Text(startupDescInput.text, style: TextStyle(color: Colors.grey, height: 1.5)),
+                    SizedBox(height: 16),
+                  ],
+                  if (startupWebsite.isNotEmpty) ...[
+                    Text('Website', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => openLink(startupWebsite),
+                      child: Row(
+                        children: [
+                          Icon(Icons.language, size: 16, color: Color(0xFF9683EC)),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              startupWebsite,
+                              style: TextStyle(
+                                color: Color(0xFF9683EC),
+                                decoration: TextDecoration.underline,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 16),
                   ],
                 ],
@@ -497,7 +547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 16),
 
-              // logout button
+              // logout
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -518,7 +568,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 12),
 
-              // delete account button
+              // delete account
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
