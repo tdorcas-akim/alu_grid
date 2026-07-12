@@ -26,8 +26,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
     'Community Management',
   ];
 
-  // smart matching — skills that relate to each role
-  // even if the exact job title isn't in the skills list
   Map<String, List<String>> roleSkillMap = {
     'Design': [
       'UI/UX Design', 'Graphic Design', 'Figma', 'Canva',
@@ -46,8 +44,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
     ],
     'Business Analysis': [
       'Business Analysis', 'Research', 'Data Analysis',
-      'Project Management', 'Operations', 'Excel',
-      'Marketing', 'Community Management',
+      'Project Management', 'Operations', 'Marketing',
+      'Community Management',
     ],
     'Content Creation': [
       'Content Writing', 'Video Editing', 'Canva',
@@ -91,11 +89,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
     }
   }
 
-  bool isMatch(String jobRole) {
+  bool isMatch(String? jobRole) {
     if (mySkills.isEmpty) return false;
+    if (jobRole == null || jobRole.isEmpty) return false;
     List<String> relatedSkills = roleSkillMap[jobRole] ?? [];
+    if (relatedSkills.isEmpty) return false;
     for (var mySkill in mySkills) {
-      // check direct match or partial match
       for (var related in relatedSkills) {
         if (related.toLowerCase().contains(mySkill.toLowerCase()) ||
             mySkill.toLowerCase().contains(related.toLowerCase())) {
@@ -181,29 +180,33 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(child: Text('No jobs available yet!', style: TextStyle(color: Colors.grey)));
+                      return Center(
+                        child: Text('No jobs available yet!', style: TextStyle(color: Colors.grey)),
+                      );
                     }
 
                     var jobs = snapshot.data!.docs.where((doc) {
                       var job = doc.data();
                       bool matchSearch = searchText.isEmpty ||
-                          job['title'].toString().toLowerCase().contains(searchText) ||
-                          job['description'].toString().toLowerCase().contains(searchText);
+                          (job['title'] ?? '').toString().toLowerCase().contains(searchText) ||
+                          (job['description'] ?? '').toString().toLowerCase().contains(searchText);
                       bool matchFilter = selectedFilter == 'All' || job['role'] == selectedFilter;
                       return matchSearch && matchFilter;
                     }).toList();
 
-                    // sort matched jobs to the top
+                    // sort matched jobs to top
                     jobs.sort((a, b) {
-                      bool aMatch = isMatch(a.data()['role'] ?? '');
-                      bool bMatch = isMatch(b.data()['role'] ?? '');
+                      bool aMatch = isMatch(a.data()['role'] as String?);
+                      bool bMatch = isMatch(b.data()['role'] as String?);
                       if (aMatch && !bMatch) return -1;
                       if (!aMatch && bMatch) return 1;
                       return 0;
                     });
 
                     if (jobs.isEmpty) {
-                      return Center(child: Text('No jobs match your search', style: TextStyle(color: Colors.grey)));
+                      return Center(
+                        child: Text('No jobs match your search', style: TextStyle(color: Colors.grey)),
+                      );
                     }
 
                     return ListView.builder(
@@ -211,7 +214,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       itemBuilder: (context, i) {
                         var job = jobs[i].data();
                         var jobId = jobs[i].id;
-                        bool matched = isMatch(job['role'] ?? '');
+                        bool matched = isMatch(job['role'] as String?);
 
                         return GestureDetector(
                           onTap: () {
@@ -231,7 +234,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                   : Color(0xFF9683EC).withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: matched ? Color(0xFF9683EC) : Color(0xFF9683EC).withOpacity(0.2),
+                                color: matched
+                                    ? Color(0xFF9683EC)
+                                    : Color(0xFF9683EC).withOpacity(0.2),
                                 width: matched ? 1.5 : 1,
                               ),
                             ),
@@ -247,7 +252,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                           Flexible(
                                             child: Text(
                                               job['title'] ?? '',
-                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
                                             ),
                                           ),
                                           if (matched) ...[
@@ -301,11 +309,17 @@ class _BrowseScreenState extends State<BrowseScreen> {
                                   children: [
                                     Icon(Icons.location_on, size: 14, color: Colors.grey),
                                     SizedBox(width: 4),
-                                    Text(job['location'] ?? '', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    Text(
+                                      job['location'] ?? '',
+                                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
                                     SizedBox(width: 12),
                                     Icon(Icons.access_time, size: 14, color: Colors.grey),
                                     SizedBox(width: 4),
-                                    Text(job['duration'] ?? '', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    Text(
+                                      job['duration'] ?? '',
+                                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                                    ),
                                     SizedBox(width: 12),
                                     Container(
                                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),

@@ -68,7 +68,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         selectedSkills = skills.map((s) => s.toString()).toList();
-        // add custom skills to the list so they show up
         for (var cs in customSkills) {
           if (!allSkills.contains(cs.toString())) {
             allSkills.add(cs.toString());
@@ -99,7 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     setState(() => loading = true);
 
-    // separate default and custom skills
     List<String> defaultSkillsList = [
       'UI/UX Design', 'Flutter', 'Python', 'JavaScript', 'HTML/CSS',
       'React', 'Node.js', 'Marketing', 'Content Writing', 'Business Analysis',
@@ -134,6 +132,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Color(0xFF9683EC),
       ),
     );
+  }
+
+  void deleteAccount() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    bool confirm = await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Delete Account'),
+        content: Text(
+          'Are you sure? This will permanently delete your account and all your data. This cannot be undone!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm) {
+      try {
+        String uid = auth.user!.uid;
+
+        // delete user data from firestore
+        await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+
+        // delete firebase auth account
+        await auth.user!.delete();
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please log out and log back in before deleting your account'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -418,6 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               SizedBox(height: 8),
 
+              // dark mode toggle
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
@@ -450,6 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 16),
 
+              // logout button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -466,6 +514,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text('Logout', style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+              ),
+              SizedBox(height: 12),
+
+              // delete account button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: deleteAccount,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.red),
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Delete Account', style: TextStyle(color: Colors.red, fontSize: 16)),
                 ),
               ),
             ],
