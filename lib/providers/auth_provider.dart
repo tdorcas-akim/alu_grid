@@ -16,7 +16,6 @@ class AuthProvider extends ChangeNotifier {
     _auth.authStateChanges().listen((u) async {
       user = u;
       if (u != null) {
-        // fetch user role from firestore
         await fetchUserData();
       } else {
         role = '';
@@ -41,7 +40,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String name, String email, String password, String selectedRole) async {
+  Future<bool> register(
+    String name,
+    String email,
+    String password,
+    String selectedRole, {
+    String startupName = '',
+    String startupOneLiner = '',
+    String startupWebsite = '',
+  }) async {
     try {
       loading = true;
       error = '';
@@ -52,13 +59,23 @@ class AuthProvider extends ChangeNotifier {
         password: password,
       );
 
-      await _db.collection('users').doc(result.user!.uid).set({
+      // base user data
+      Map<String, dynamic> userData = {
         'name': name,
         'email': email,
         'role': selectedRole,
-        'verified': selectedRole == 'student' ? true : false,
+        'verified': true,
         'createdAt': DateTime.now().toString(),
-      });
+      };
+
+      // add startup specific data
+      if (selectedRole == 'startup') {
+        userData['startupName'] = startupName;
+        userData['startupOneLiner'] = startupOneLiner;
+        userData['startupWebsite'] = startupWebsite;
+      }
+
+      await _db.collection('users').doc(result.user!.uid).set(userData);
 
       role = selectedRole;
       this.name = name;

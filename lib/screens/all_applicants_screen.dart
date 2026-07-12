@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/auth_provider.dart';
 import 'chat_screen.dart';
 
@@ -10,6 +11,15 @@ class AllApplicantsScreen extends StatelessWidget {
         .collection('applications')
         .doc(appId)
         .update({'status': status});
+  }
+
+  void openLink(String url) async {
+    if (url.isEmpty) return;
+    if (!url.startsWith('http')) url = 'https://$url';
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -57,6 +67,7 @@ class AllApplicantsScreen extends StatelessWidget {
                       itemBuilder: (context, i) {
                         var app = apps[i].data();
                         var appId = apps[i].id;
+                        String portfolioLink = app['portfolioLink'] ?? '';
 
                         Color statusColor = app['status'] == 'accepted'
                             ? Colors.green
@@ -90,7 +101,11 @@ class AllApplicantsScreen extends StatelessWidget {
                                     ),
                                     child: Text(
                                       app['status'].toString().toUpperCase(),
-                                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: statusColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -101,10 +116,7 @@ class AllApplicantsScreen extends StatelessWidget {
                                 style: TextStyle(color: Color(0xFF9683EC), fontSize: 13),
                               ),
                               SizedBox(height: 8),
-                              Text(
-                                'Cover Letter:',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
+                              Text('Cover Letter:', style: TextStyle(fontWeight: FontWeight.w500)),
                               SizedBox(height: 4),
                               Text(
                                 app['coverLetter'] ?? '',
@@ -113,30 +125,34 @@ class AllApplicantsScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
 
-                              // show portfolio link if exists
-                              if (app['portfolioLink'] != null && app['portfolioLink'].toString().isNotEmpty) ...[
-                                SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(Icons.link, size: 14, color: Color(0xFF9683EC)),
-                                    SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        app['portfolioLink'],
-                                        style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
-                                        overflow: TextOverflow.ellipsis,
+                              // clickable portfolio link
+                              if (portfolioLink.isNotEmpty) ...[
+                                SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: () => openLink(portfolioLink),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.link, size: 14, color: Color(0xFF9683EC)),
+                                      SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          portfolioLink,
+                                          style: TextStyle(
+                                            color: Color(0xFF9683EC),
+                                            fontSize: 12,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
 
                               SizedBox(height: 12),
-
-                              // action buttons
                               Row(
                                 children: [
-                                  // message student button
                                   Expanded(
                                     child: OutlinedButton.icon(
                                       onPressed: () {
@@ -159,8 +175,6 @@ class AllApplicantsScreen extends StatelessWidget {
                                     ),
                                   ),
                                   SizedBox(width: 6),
-
-                                  // accept button
                                   if (app['status'] != 'accepted')
                                     Expanded(
                                       child: ElevatedButton(
@@ -173,8 +187,6 @@ class AllApplicantsScreen extends StatelessWidget {
                                       ),
                                     ),
                                   SizedBox(width: 6),
-
-                                  // not selected / reconsider button
                                   if (app['status'] == 'accepted')
                                     Expanded(
                                       child: ElevatedButton(

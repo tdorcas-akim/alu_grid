@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'chat_screen.dart';
 
 class ApplicantsScreen extends StatelessWidget {
@@ -13,6 +14,15 @@ class ApplicantsScreen extends StatelessWidget {
         .collection('applications')
         .doc(appId)
         .update({'status': status});
+  }
+
+  void openLink(String url) async {
+    if (url.isEmpty) return;
+    if (!url.startsWith('http')) url = 'https://$url';
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
@@ -31,7 +41,11 @@ class ApplicantsScreen extends StatelessWidget {
               SizedBox(height: 20),
               Text(
                 'Applicants',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF9683EC)),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF9683EC),
+                ),
               ),
               SizedBox(height: 4),
               Text(jobTitle, style: TextStyle(color: Colors.grey)),
@@ -49,7 +63,9 @@ class ApplicantsScreen extends StatelessWidget {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(child: Text('No applicants yet!', style: TextStyle(color: Colors.grey)));
+                      return Center(
+                        child: Text('No applicants yet!', style: TextStyle(color: Colors.grey)),
+                      );
                     }
 
                     var apps = snapshot.data!.docs;
@@ -59,6 +75,7 @@ class ApplicantsScreen extends StatelessWidget {
                       itemBuilder: (context, i) {
                         var app = apps[i].data();
                         var appId = apps[i].id;
+                        String portfolioLink = app['portfolioLink'] ?? '';
 
                         Color statusColor = app['status'] == 'accepted'
                             ? Colors.green
@@ -92,7 +109,11 @@ class ApplicantsScreen extends StatelessWidget {
                                     ),
                                     child: Text(
                                       app['status'].toString().toUpperCase(),
-                                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: statusColor,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -105,20 +126,28 @@ class ApplicantsScreen extends StatelessWidget {
                                 style: TextStyle(color: Colors.grey, fontSize: 13),
                               ),
 
-                              if (app['portfolioLink'] != null && app['portfolioLink'].toString().isNotEmpty) ...[
-                                SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(Icons.link, size: 14, color: Color(0xFF9683EC)),
-                                    SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        app['portfolioLink'],
-                                        style: TextStyle(color: Color(0xFF9683EC), fontSize: 12),
-                                        overflow: TextOverflow.ellipsis,
+                              // clickable portfolio link
+                              if (portfolioLink.isNotEmpty) ...[
+                                SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: () => openLink(portfolioLink),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.link, size: 14, color: Color(0xFF9683EC)),
+                                      SizedBox(width: 4),
+                                      Expanded(
+                                        child: Text(
+                                          portfolioLink,
+                                          style: TextStyle(
+                                            color: Color(0xFF9683EC),
+                                            fontSize: 12,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
 
