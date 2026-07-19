@@ -1,12 +1,12 @@
 # ALU Grid
 
-ALU Grid is a mobile app I built for my final Flutter project at ALU. The idea came from a real problem I noticed — students at ALU struggle to find internships, and student founders struggle to find people to help them build their startups. There was no dedicated place for both sides to connect within the ALU community. So I built one.
+A mobile application that connects ALU students looking for internship experience with student-led startups within the ALU ecosystem. It is built with Flutter and Firebase.
 
 ---
 
-## The idea
+## What it does
 
-Students can browse internship opportunities posted by ALU startups, apply with a cover letter and a portfolio link, track their application status, and chat directly with the startup. Startups can post roles, see who applied, accept or decline applicants, and message students — all in one place.
+Students can browse internship opportunities posted by ALU startups, apply with a cover letter and a portfolio link, track their application status, and chat directly with the startup. Startups can post roles, see who applied, accept or decline applicants, and message students all in one place.
 
 ---
 
@@ -29,7 +29,7 @@ Students can browse internship opportunities posted by ALU startups, apply with 
 - Accept applicants, mark them as not selected, or reconsider
 - Message students directly from the applicants screen
 
-**Extra stuff I added**
+**Other Features added**
 - Skill-based job matching, jobs that fit your skills appear at the top with a green badge
 - Real-time chat between students and startups
 - Unread message indicator on the Messages tab
@@ -113,10 +113,10 @@ Anyone outside these domains gets blocked at registration.
 
 I used **Provider** for this. Two main classes handle global state:
 
-- `AuthProvider` — keeps track of who is logged in, their role (student or startup), their name, loading states, and errors. It listens to Firebase's `authStateChanges()` stream so every screen updates automatically when someone logs in or out.
-- `ThemeProvider` — controls dark/light mode. When you tap the toggle on the profile screen, every screen switches instantly.
+- `AuthProvider` : keeps track of who is logged in, their role (student or startup), their name, loading states, and errors. It listens to Firebase's `authStateChanges()` stream so every screen updates automatically when someone logs in or out.
+- `ThemeProvider` : controls dark/light mode. When you tap the toggle on the profile screen, every screen switches instantly.
 
-For live data like job listings, messages, and applications, I used `StreamBuilder`. It listens to a Firestore query and rebuilds the UI the moment the data changes — no manual refresh needed.
+For live data like job listings, messages, and applications, I used `StreamBuilder`. It listens to a Firestore query and rebuilds the UI the moment the data changes, no manual refresh needed.
 
 ---
 
